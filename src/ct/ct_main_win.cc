@@ -1535,22 +1535,26 @@ void CtMainWin::text_typography_apply()
     }
     _ctTextview.set_pixels_inside_wrap(_pCtConfig->spaceAroundLines + lineExtraPx, _pCtConfig->relativeWrappedSpace);
     textView.set_top_margin(_pCtConfig->textMarginTop);
-    // don't clobber the scroll-beyond-last-line bottom padding (see config_apply)
+    // scroll room below the last line: 400px when scroll-beyond-last-line is on,
+    // or whenever typewriter scrolling is enabled (the cursor must be able to
+    // rise above the bottom edge even at end of document)
     gtk_text_view_set_bottom_margin(GTK_TEXT_VIEW(_ctTextview.gobj()),
-        _pCtConfig->scrollBeyondLastLine ? 400 : _pCtConfig->textMarginBottom);
+        (_pCtConfig->scrollBeyondLastLine or _pCtConfig->cursorBottomBlankPct > 0) ? 400 : _pCtConfig->textMarginBottom);
     _update_editor_width_margins(-1/*unknown alloc width yet*/);
 }
 
 // typewriter scrolling: while typing/moving the cursor, keep a blank strip
 // (cursorBottomBlankPct % of the viewport) below the cursor line, so the
-// cursor never hugs the statusbar; 50% ≈ cursor stays near mid-screen
+// cursor never hugs the statusbar; 50% ≈ cursor stays near mid-screen.
+// Runs 120ms after the last cursor move on purpose: GtkTextView first does
+// its own minimal "scroll cursor onscreen" pass, we then correct it once.
 void CtMainWin::typewriter_scroll_cursor()
 {
     if (_pCtConfig->cursorBottomBlankPct <= 0 or _typewriterScrollPending) {
         return;
     }
     _typewriterScrollPending = true;
-    Glib::signal_idle().connect_once([this]() {
+    Glib::signal_timeout().connect_once([this]() {
         _typewriterScrollPending = false;
         if (force_exit() or _no_gui or _pCtConfig->cursorBottomBlankPct <= 0) {
             return;
@@ -1567,19 +1571,22 @@ void CtMainWin::typewriter_scroll_cursor()
             return;
         }
         const int blankPx = viewH * std::min(_pCtConfig->cursorBottomBlankPct, 90) / 100;
-        Gtk::TextIter insertIter = buffer->get_insert()->get_iter();
+        Glib::RefPtr<Gtk::TextMark> insertMark = buffer->get_insert();
+        Gtk::TextIter insertIter = insertMark->get_iter();
         Gdk::Rectangle iterRect;
         textView.mm().get_iter_location(insertIter, iterRect);
         // iter location and visible rect share buffer coordinates
         const int lineBottom = iterRect.get_y() + iterRect.get_height();
-        const int screenBottom = lineBottom - static_cast<int>(getScrolledwindowText().get_vadjustment()->get_value());
+        const int screenBottom = lineBottom - visible.get_y();
         const int limitY = viewH - blankPx;
         if (screenBottom > limitY) {
-            auto vAdj = getScrolledwindowText().get_vadjustment();
-            const double target = lineBottom - limitY;
-            vAdj->set_value(std::clamp(target, vAdj->get_lower(), std::max(vAdj->get_lower(), vAdj->get_upper() - vAdj->get_page_size())));
+            // align the cursor line's bottom edge with the blank line;
+            // scroll_to_mark clamps itself at the scrollable limits
+            const double yalign = std::clamp(
+                (static_cast<double>(limitY - iterRect.get_height()) / viewH), 0.0, 1.0);
+            textView.mm().scroll_to_mark(insertMark, 0.0, /*use_align*/true, /*xalign*/0.0, yalign);
         }
-    });
+    }, 120);
 }
 
 void CtMainWin::_update_editor_width_margins(int allocWidth)

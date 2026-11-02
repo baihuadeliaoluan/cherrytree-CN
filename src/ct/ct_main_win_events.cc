@@ -499,6 +499,9 @@ void CtMainWin::_on_textview_size_allocate(Gtk::Allocation& allocation)
 
     // centered fixed-width editor column (like Typora), only when editorWidth > 0
     _update_editor_width_margins(allocation.get_width());
+
+    // viewport size changed: the cursor may have fallen into the bottom blank zone
+    typewriter_scroll_cursor();
 }
 
 #if GTKMM_MAJOR_VERSION < 4 && !defined(GTKMM_DISABLE_DEPRECATED)

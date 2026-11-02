@@ -1319,6 +1319,7 @@ void CtTreeStore::_on_textbuffer_changed_word_count()
 {
     if (_pCtMainWin->user_active()) {
         _pCtMainWin->schedule_word_count_refresh();
+        _pCtMainWin->typewriter_scroll_cursor();
     }
 }
 
