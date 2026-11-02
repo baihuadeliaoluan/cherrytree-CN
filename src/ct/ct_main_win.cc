@@ -1579,7 +1579,9 @@ void CtMainWin::text_typography_apply()
     }
     _ctTextview.set_pixels_inside_wrap(_pCtConfig->spaceAroundLines + lineExtraPx, _pCtConfig->relativeWrappedSpace);
     textView.set_top_margin(_pCtConfig->textMarginTop);
-    gtk_text_view_set_bottom_margin(GTK_TEXT_VIEW(_ctTextview.gobj()), _pCtConfig->textMarginBottom);
+    // don't clobber the scroll-beyond-last-line bottom padding (see config_apply)
+    gtk_text_view_set_bottom_margin(GTK_TEXT_VIEW(_ctTextview.gobj()),
+        _pCtConfig->scrollBeyondLastLine ? 400 : _pCtConfig->textMarginBottom);
     _update_editor_width_margins(-1/*unknown alloc width yet*/);
 }
 
