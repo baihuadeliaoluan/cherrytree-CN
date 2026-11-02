@@ -346,6 +346,17 @@ PangoDirection get_pango_direction(const Gtk::TextIter& textIter);
 int get_words_count(const Glib::RefPtr<Gtk::TextBuffer>& text_buffer);
 int get_words_count(const Glib::ustring& text);
 
+// word count info, Word-like counting: each CJK char counts as one word,
+// consecutive western letters/digits count as one word
+struct CtWordCountInfo
+{
+    int words{0};           // 字数
+    int chars{0};           // 字符数（计空格）
+    int charsNoSpaces{0};   // 字符数（不计空格）
+};
+CtWordCountInfo get_word_count_info(const Glib::ustring& text);
+CtWordCountInfo get_word_count_info(const Glib::RefPtr<Gtk::TextBuffer>& text_buffer);
+
 const inline static size_t LINE_CONTENT_LIMIT{100u};
 Glib::ustring get_line_content(Glib::RefPtr<Gtk::TextBuffer> text_buffer, const int match_end_offset);
 Glib::ustring get_line_content(const Glib::ustring& text_multiline, const int match_end_offset);

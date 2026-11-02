@@ -226,6 +226,7 @@ protected:
     void _on_textbuffer_insert(const Gtk::TextBuffer::iterator& pos, const Glib::ustring& text, int bytes);
     void _on_textbuffer_erase(const Gtk::TextBuffer::iterator& range_start, const Gtk::TextBuffer::iterator& range_end);
     void _on_textbuffer_mark_set(const Gtk::TextIter& iter, const Glib::RefPtr<Gtk::TextMark>& rMark);
+    void _on_textbuffer_changed_word_count();
 
 private:
     CtTreeModelColumns              _columns;

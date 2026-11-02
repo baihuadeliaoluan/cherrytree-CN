@@ -30,6 +30,7 @@
 #include "ct_table.h"
 #include "ct_types.h"
 #include "ct_filesystem.h"
+#include "ct_misc_utils.h"
 #include <optional>
 
 class CtMainWin;
@@ -311,7 +312,7 @@ public:
 
 public:
     // helper for format actions
-    int get_word_count_for_statusbar();
+    CtTextIterUtil::CtWordCountInfo get_word_count_for_statusbar(bool& is_selection);
     void apply_tag(const Glib::ustring& tag_property,
                    Glib::ustring property_value = "",
                    std::optional<Gtk::TextIter> iter_sel_start = std::nullopt,
@@ -365,6 +366,7 @@ public:
     void apply_tag_justify_center();
     void apply_tag_justify_right();
     void apply_tag_justify_fill();
+    void apply_tag_justify_fill_all();
 
 private:
     // helper for edit actions

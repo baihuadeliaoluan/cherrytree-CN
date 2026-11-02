@@ -65,6 +65,7 @@ set(CT_SHARED_FILES
   ct_pref_dlg_theme.cc
   ct_pref_dlg_toolbar.cc
   ct_pref_dlg_tree.cc
+  ct_pref_dlg_typography.cc
   ct_state_machine.cc
   ct_storage_control.cc
   ct_storage_sqlite.cc

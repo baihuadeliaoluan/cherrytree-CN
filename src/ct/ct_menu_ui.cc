@@ -286,6 +286,7 @@ const char* CtMenu::_get_ui_str_menu()
       <menuitem action='fmt_justify_center'/>
       <menuitem action='fmt_justify_right'/>
       <menuitem action='fmt_justify_fill'/>
+      <menuitem action='fmt_justify_fill_all'/>
     </menu>
   </menu>
 
@@ -468,6 +469,7 @@ const char* CtMenu::_get_popup_menu_ui_str_text()
       <menuitem action='fmt_justify_center'/>
       <menuitem action='fmt_justify_right'/>
       <menuitem action='fmt_justify_fill'/>
+      <menuitem action='fmt_justify_fill_all'/>
     </menu>
   </menu>
   <menu action='InsertSubMenu'>

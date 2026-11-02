@@ -126,6 +126,10 @@ public:
     int                                         scrollSliderMin{14}; /* 0=system theme, >0=pixels */
     int                                         textMarginLeft{7};
     int                                         textMarginRight{7};
+    int                                         textMarginTop{3};
+    int                                         textMarginBottom{3};
+    int                                         editorWidth{0}; /* 0 = full width, >0 = centered content column width in px */
+    double                                      lineSpacing{1.0}; /* line height ratio, 1.0 = default */
     int                                         tabsWidth{4};
     int                                         anchorSize{20};
     int                                         latexSizeDpi{140};

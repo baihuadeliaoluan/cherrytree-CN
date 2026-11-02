@@ -333,6 +333,18 @@ void CtActions::apply_tag_justify_fill()
     apply_tag(CtConst::TAG_JUSTIFICATION, CtConst::TAG_PROP_VAL_FILL, range.iter_start, range.iter_end);
 }
 
+// Justify Fill the Whole Document (all paragraphs at once)
+void CtActions::apply_tag_justify_fill_all()
+{
+    if (not _is_curr_node_not_read_only_or_error()) return;
+    auto text_buffer = _curr_buffer();
+    if (not text_buffer) return;
+    Gtk::TextIter iter_start = text_buffer->begin();
+    Gtk::TextIter iter_end = text_buffer->end();
+    if (iter_start == iter_end) return;
+    apply_tag(CtConst::TAG_JUSTIFICATION, CtConst::TAG_PROP_VAL_FILL, iter_start, iter_end);
+}
+
 void CtActions::apply_tag(const Glib::ustring& tag_property,
                           Glib::ustring property_value/*= ""*/,
                           std::optional<Gtk::TextIter> iter_sel_start/*= std::nullopt*/,
@@ -545,32 +557,33 @@ CtActions::text_view_n_buffer_codebox_proof CtActions::_get_text_view_n_buffer_c
         nullptr};
 }
 
-int CtActions::get_word_count_for_statusbar()
+CtTextIterUtil::CtWordCountInfo CtActions::get_word_count_for_statusbar(bool& is_selection)
 {
-    auto get_words_count_for_buffer = [](const Glib::RefPtr<Gtk::TextBuffer>& text_buffer)->int {
+    is_selection = false;
+    auto get_words_count_for_buffer = [](const Glib::RefPtr<Gtk::TextBuffer>& text_buffer)->CtTextIterUtil::CtWordCountInfo {
         if (not text_buffer) {
-            return 0;
+            return CtTextIterUtil::CtWordCountInfo{};
         }
         Gtk::TextIter iter_sel_start;
         Gtk::TextIter iter_sel_end;
         if (text_buffer->get_selection_bounds(iter_sel_start, iter_sel_end)) {
-            return CtTextIterUtil::get_words_count(text_buffer->get_text(iter_sel_start, iter_sel_end, true));
+            return CtTextIterUtil::get_word_count_info(text_buffer->get_text(iter_sel_start, iter_sel_end, true));
         }
-        return CtTextIterUtil::get_words_count(text_buffer->get_text(true));
+        return CtTextIterUtil::get_word_count_info(text_buffer->get_text(true));
     };
 
-    auto get_words_count_for_table = [get_words_count_for_buffer](CtTableCommon* pTable)->int {
+    auto get_words_count_for_table = [get_words_count_for_buffer](CtTableCommon* pTable)->CtTextIterUtil::CtWordCountInfo {
         if (not pTable) {
-            return 0;
+            return CtTextIterUtil::CtWordCountInfo{};
         }
         if (auto pTableHeavy = dynamic_cast<CtTableHeavy*>(pTable)) {
             const auto curr_cell_buffer = pTableHeavy->curr_cell_text_view().get_buffer();
             return get_words_count_for_buffer(curr_cell_buffer);
         }
         if (auto pTableLight = dynamic_cast<CtTableLight*>(pTable)) {
-            return CtTextIterUtil::get_words_count(pTableLight->get_curr_cell_text());
+            return CtTextIterUtil::get_word_count_info(pTableLight->get_curr_cell_text());
         }
-        return 0;
+        return CtTextIterUtil::CtWordCountInfo{};
     };
 
     if (auto pCodebox = _codebox_in_use()) {
@@ -582,10 +595,10 @@ int CtActions::get_word_count_for_statusbar()
 
     const auto text_buffer = _pCtMainWin->get_text_view().get_buffer();
     if (not text_buffer) {
-        return 0;
+        return CtTextIterUtil::CtWordCountInfo{};
     }
 
-    int words_count = get_words_count_for_buffer(text_buffer);
+    CtTextIterUtil::CtWordCountInfo words_count = get_words_count_for_buffer(text_buffer);
     Gtk::TextIter iter_sel_start;
     Gtk::TextIter iter_sel_end;
     if (text_buffer->get_selection_bounds(iter_sel_start, iter_sel_end) and
@@ -604,10 +617,14 @@ int CtActions::get_word_count_for_statusbar()
                 }
                 else {
                     // Single-char anchor selection of non-text widgets must not report 0.
-                    words_count = CtTextIterUtil::get_words_count(text_buffer->get_text(true));
+                    words_count = CtTextIterUtil::get_word_count_info(text_buffer->get_text(true));
                 }
             }
         }
+    }
+
+    if (text_buffer->get_has_selection()) {
+        is_selection = true;
     }
 
     return words_count;

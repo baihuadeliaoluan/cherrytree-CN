@@ -3152,3 +3152,42 @@ msgstr "您确定要重置为默认值吗？"
 
 #~ msgid "Find in Multiple Nodes..."
 #~ msgstr "在多个节点中搜索..."
+
+msgid "Chars"
+msgstr "字符"
+
+msgid "(Selection)"
+msgstr "（选区）"
+
+msgid "Justify Fill _All Paragraphs"
+msgstr "全文两端对齐(_A)"
+
+msgid "Justify Fill the Whole Document"
+msgstr "把整篇文档的所有段落设为两端对齐"
+
+msgid "Chinese Typography"
+msgstr "中文排版"
+
+msgid "Editor Font Size"
+msgstr "编辑器字号"
+
+msgid "Line Height"
+msgstr "行高"
+
+msgid "Paragraph Spacing"
+msgstr "段落间距"
+
+msgid "Editor Width (0 = Full Width)"
+msgstr "编辑器宽度（0 = 全宽）"
+
+msgid "Horizontal Page Margin"
+msgstr "水平页边距"
+
+msgid "Vertical Page Margin"
+msgstr "垂直页边距"
+
+msgid "Tip: Format menu > Justify Fill All Paragraphs aligns the whole document."
+msgstr "提示：格式菜单 > 全文两端对齐，一键把整篇文档设为两端对齐。"
+
+msgid "Chinese Typography preferences are temporarily limited in GTK4 build."
+msgstr "中文排版设置在 GTK4 构建中暂不可用。"

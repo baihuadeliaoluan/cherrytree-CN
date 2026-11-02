@@ -496,6 +496,9 @@ void CtMainWin::_on_textview_size_allocate(Gtk::Allocation& allocation)
         _ctTextview.mm().queue_draw();
 #endif
     }
+
+    // centered fixed-width editor column (like Typora), only when editorWidth > 0
+    _update_editor_width_margins(allocation.get_width());
 }
 
 #if GTKMM_MAJOR_VERSION < 4 && !defined(GTKMM_DISABLE_DEPRECATED)

@@ -1034,6 +1034,10 @@ void CtTreeStore::text_view_apply_textbuffer(CtTreeIter& treeIter, CtTextView* p
     _curr_node_sigc_conn.push_back(
         pTextBuffer->signal_mark_set().connect(sigc::mem_fun(*this, &CtTreeStore::_on_textbuffer_mark_set), false)
     );
+    // word count live refresh on any text content change
+    _curr_node_sigc_conn.push_back(
+        pTextBuffer->signal_changed().connect(sigc::mem_fun(*this, &CtTreeStore::_on_textbuffer_changed_word_count))
+    );
     if (treeIter.get_node_is_rich_text()) {
         const auto nodeIdDataHolder = treeIter.get_node_id_data_holder();
         _curr_node_sigc_conn.push_back(
@@ -1283,6 +1287,10 @@ void CtTreeStore::_on_textbuffer_modified_changed(Glib::RefPtr<Gtk::TextBuffer> 
     if (_pCtMainWin->user_active() and pTextBuffer->get_modified()) {
         _pCtMainWin->update_window_save_needed(CtSaveNeededUpdType::nbuf);
     }
+    // text content changed (typing, paste, delete) refresh the word count statusbar
+    if (_pCtMainWin->user_active() and pTextBuffer->get_modified()) {
+        _pCtMainWin->schedule_word_count_refresh();
+    }
 }
 
 void CtTreeStore::_on_textbuffer_insert(const Gtk::TextBuffer::iterator& pos, const Glib::ustring& text, int /*bytes*/)
@@ -1307,6 +1315,13 @@ void CtTreeStore::_on_textbuffer_erase(const Gtk::TextBuffer::iterator& range_st
     }
 }
 
+void CtTreeStore::_on_textbuffer_changed_word_count()
+{
+    if (_pCtMainWin->user_active()) {
+        _pCtMainWin->schedule_word_count_refresh();
+    }
+}
+
 void CtTreeStore::_on_textbuffer_mark_set(const Gtk::TextIter& /*iter*/, const Glib::RefPtr<Gtk::TextMark>& rMark)
 {
     if (_pCtMainWin->user_active()) {
@@ -1316,6 +1331,10 @@ void CtTreeStore::_on_textbuffer_mark_set(const Gtk::TextIter& /*iter*/, const G
                 _pCtMainWin->get_state_machine().update_curr_state_cursor_pos(currTreeIter.get_node_id_data_holder());
             }
             _pCtMainWin->get_text_view().column_edit_selection_update();
+        }
+        // selection changes (and cursor moves) refresh the word count statusbar
+        if (rMark->get_name() == "insert" or rMark->get_name() == "selection_bound") {
+            _pCtMainWin->schedule_word_count_refresh();
         }
     }
 }

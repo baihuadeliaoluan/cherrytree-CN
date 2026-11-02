@@ -343,6 +343,12 @@ void CtConfig::_populate_keyfile_from_data()
     _uKeyFile->set_boolean(_currentGroup, "pt_highl_match_bra", ptHighlMatchBra);
     _uKeyFile->set_integer(_currentGroup, "space_around_lines", spaceAroundLines);
     _uKeyFile->set_integer(_currentGroup, "relative_wrapped_space", relativeWrappedSpace);
+    _uKeyFile->set_integer(_currentGroup, "text_margin_left", textMarginLeft);
+    _uKeyFile->set_integer(_currentGroup, "text_margin_right", textMarginRight);
+    _uKeyFile->set_integer(_currentGroup, "text_margin_top", textMarginTop);
+    _uKeyFile->set_integer(_currentGroup, "text_margin_bottom", textMarginBottom);
+    _uKeyFile->set_integer(_currentGroup, "editor_width", editorWidth);
+    _uKeyFile->set_double(_currentGroup, "line_spacing", lineSpacing);
     _uKeyFile->set_string(_currentGroup, "h_rule", hRule);
     _uKeyFile->set_string(_currentGroup, "vte_shell", vteShell);
     _uKeyFile->set_string(_currentGroup, "special_chars", specialChars.item());
@@ -679,6 +685,12 @@ void CtConfig::_populate_data_from_keyfile()
     _populate_bool_from_keyfile("pt_highl_match_bra", &ptHighlMatchBra);
     _populate_int_from_keyfile("space_around_lines", &spaceAroundLines);
     _populate_int_from_keyfile("relative_wrapped_space", &relativeWrappedSpace);
+    _populate_int_from_keyfile("text_margin_left", &textMarginLeft);
+    _populate_int_from_keyfile("text_margin_right", &textMarginRight);
+    _populate_int_from_keyfile("text_margin_top", &textMarginTop);
+    _populate_int_from_keyfile("text_margin_bottom", &textMarginBottom);
+    _populate_int_from_keyfile("editor_width", &editorWidth);
+    _populate_double_from_keyfile("line_spacing", &lineSpacing);
     _populate_string_from_keyfile("h_rule", &hRule);
     _populate_string_from_keyfile("vte_shell", &vteShell);
     _populate_string_from_keyfile("special_chars", &specialChars);

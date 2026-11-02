@@ -24,6 +24,7 @@
 #include "ct_main_win.h"
 #include "ct_misc_utils.h"
 #include <pangomm.h>
+#include <glibmm/unicode.h>
 #include <iostream>
 #include <cstring>
 #include "ct_const.h"
@@ -843,25 +844,61 @@ int CtTextIterUtil::get_words_count(const Glib::RefPtr<Gtk::TextBuffer>& text_bu
 
 int CtTextIterUtil::get_words_count(const Glib::ustring& text)
 {
+    return get_word_count_info(text).words;
+}
+
+// CJK ideographs and CJK punctuation, counted char-by-char like MS Word does
+// for Chinese text (one hanzi = one word; full-width punctuation also counts)
+inline bool _is_cjk_char(gunichar ch)
+{
+    return (ch >= 0x2E80 && ch <= 0x2EFF)    // CJK Radicals Supplement
+        || (ch >= 0x3000 && ch <= 0x303F)    // CJK Symbols and Punctuation (，。、《》)
+        || (ch >= 0x3040 && ch <= 0x30FF)    // Hiragana + Katakana
+        || (ch >= 0x3130 && ch <= 0x318F)    // Hangul Compatibility Jamo
+        || (ch >= 0x3400 && ch <= 0x4DBF)    // CJK Extension A
+        || (ch >= 0x4E00 && ch <= 0x9FFF)    // CJK Unified Ideographs
+        || (ch >= 0xAC00 && ch <= 0xD7AF)    // Hangul Syllables
+        || (ch >= 0xF900 && ch <= 0xFAFF)    // CJK Compatibility Ideographs
+        || (ch >= 0xFF00 && ch <= 0xFF5F)    // Full-width Forms (！？ＡＢ)
+        || (ch >= 0x20000 && ch <= 0x2FA1F); // CJK Extension B+
+}
+
+CtTextIterUtil::CtWordCountInfo CtTextIterUtil::get_word_count_info(const Glib::ustring& text)
+{
+    CtWordCountInfo info;
     if (text.empty()) {
-        return 0;
+        return info;
     }
 
-    int words = 0;
-    const int text_size = static_cast<int>(text.size());
-    std::vector<PangoLogAttr> attrs(text_size + 1);
-    pango_get_log_attrs(text.c_str(),
-                        -1,
-                        0,
-                        pango_language_get_default(),
-                        attrs.data(),
-                        text_size + 1);
-    for (int i = 0; i < text_size; ++i) {
-        if (attrs[i].is_word_start) {
-            ++words;
+    bool inWord = false;
+    for (const gunichar ch : text) {
+        ++info.chars;
+        if (not Glib::Unicode::isspace(ch)) {
+            ++info.charsNoSpaces;
+        }
+        if (_is_cjk_char(ch)) {
+            ++info.words;   // every CJK char is a word on its own
+            inWord = false;
+        }
+        else if (Glib::Unicode::isalnum(ch)) {
+            if (not inWord) {
+                ++info.words;   // start of a western word / number run
+                inWord = true;
+            }
+        }
+        else {
+            inWord = false;
         }
     }
-    return words;
+    return info;
+}
+
+CtTextIterUtil::CtWordCountInfo CtTextIterUtil::get_word_count_info(const Glib::RefPtr<Gtk::TextBuffer>& text_buffer)
+{
+    if (not text_buffer) {
+        return CtWordCountInfo{};
+    }
+    return get_word_count_info(text_buffer->get_text(true));
 }
 
 // Returns the Line Content Given the Text Iter

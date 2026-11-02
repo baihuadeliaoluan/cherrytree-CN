@@ -134,7 +134,8 @@ public:
     bool get_file_save_needed();
 
     void update_selected_node_statusbar_info();
-
+    void schedule_word_count_refresh();
+    void text_typography_apply();
     void tree_node_paste_from_other_window(CtMainWin* pWinToCopyFrom, gint64 nodeIdToCopyFrom);
 
     Glib::RefPtr<Gtk::TextBuffer>     curr_buffer() { return _ctTextview.get_buffer(); }
@@ -319,6 +320,7 @@ private:
     bool _on_textview_visibility_notify_event(GdkEventVisibility* event);
 #endif /* GTKMM_MAJOR_VERSION < 4 && !defined(GTKMM_DISABLE_DEPRECATED) */
     void _on_textview_size_allocate(Gtk::Allocation& allocation);
+    void _update_editor_width_margins(int allocWidth);
     #if GTKMM_MAJOR_VERSION < 4 && !defined(GTKMM_DISABLE_DEPRECATED)
     bool _on_textview_event(GdkEvent* event);
     void _on_textview_event_after(GdkEvent* event);
@@ -390,6 +392,7 @@ private:
 private:
     bool                _userActive{true}; // pygtk: user_active
     bool                _isUpdatingStatusbarInfo{false};
+    bool                _wordCountRefreshPending{false};
     bool                _forceExit{false};
     int                 _cursorKeyPress{-1};
     int                 _autoSaveCounter{0};

@@ -79,6 +79,7 @@ CtPrefDlg::CtPrefDlg(CtMainWin* parent)
 #endif
     pNotebook->append_page(*build_tab_text_n_code(),        _("Text and Code"));
     pNotebook->append_page(*build_tab_rich_text(),          _("Rich Text"));
+    pNotebook->append_page(*build_tab_typography(),         _("Chinese Typography"));
     pNotebook->append_page(*build_tab_format(),             _("Format"));
     pNotebook->append_page(*build_tab_plain_text_n_code(),  _("Plain Text and Code"));
     pNotebook->append_page(*build_tab_special_characters(), _("Special Characters"));

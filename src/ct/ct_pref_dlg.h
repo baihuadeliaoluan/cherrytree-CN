@@ -41,6 +41,7 @@ public:
 private:
     Gtk::Widget* build_tab_text_n_code();
     Gtk::Widget* build_tab_rich_text();
+    Gtk::Widget* build_tab_typography();
     Gtk::Widget* build_tab_format();
     Gtk::Widget* build_tab_plain_text_n_code();
     Gtk::Widget* build_tab_special_characters();

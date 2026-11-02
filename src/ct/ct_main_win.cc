@@ -662,9 +662,7 @@ void CtMainWin::config_apply()
     gtk_source_view_set_insert_spaces_instead_of_tabs(pGtkSourceView, _pCtConfig->spacesInsteadTabs);
     gtk_source_view_set_tab_width(pGtkSourceView, _pCtConfig->tabsWidth);
     textView.set_indent(_pCtConfig->wrappingIndent);
-    textView.set_pixels_above_lines(_pCtConfig->spaceAroundLines);
-    textView.set_pixels_below_lines(_pCtConfig->spaceAroundLines);
-    _ctTextview.set_pixels_inside_wrap(_pCtConfig->spaceAroundLines, _pCtConfig->relativeWrappedSpace);
+    text_typography_apply();
     #if GTKMM_MAJOR_VERSION >= 4
     gtk_text_view_set_bottom_margin(GTK_TEXT_VIEW(textView.gobj()), _pCtConfig->scrollBeyondLastLine ? 400 : 0);
     textView.set_wrap_mode(_pCtConfig->lineWrapping ? Gtk::WrapMode::WORD_CHAR : Gtk::WrapMode::NONE);
@@ -1524,8 +1522,13 @@ void CtMainWin::update_selected_node_statusbar_info()
             statusbar_text += separator_text + _("Spell Check") + _(": ") + _pCtConfig->spellCheckLang;
         }
         if (_pCtConfig->wordCountOn and _uCtActions) {
-            const int words_count = _uCtActions->get_word_count_for_statusbar();
-            statusbar_text += separator_text + _("Word Count") + _(": ") + std::to_string(words_count);
+            bool is_selection = false;
+            const auto wordCountInfo = _uCtActions->get_word_count_for_statusbar(is_selection);
+            statusbar_text += separator_text + _("Word Count") + _(": ") + std::to_string(wordCountInfo.words);
+            if (is_selection) {
+                statusbar_text += _("(Selection)");
+            }
+            statusbar_text += separator_text + _("Chars") + _(": ") + std::to_string(wordCountInfo.chars);
         }
         if (treeIter.get_node_creating_time() > 0) {
             const Glib::ustring timestamp_creation = str::time_format(_pCtConfig->timestampFormat, treeIter.get_node_creating_time());
@@ -1546,6 +1549,57 @@ void CtMainWin::update_selected_node_statusbar_info()
         }
     }
     _ctStatusBar.update_status(statusbar_text);
+}
+
+void CtMainWin::schedule_word_count_refresh()
+{
+    if (_wordCountRefreshPending or _isUpdatingStatusbarInfo) {
+        return;
+    }
+    _wordCountRefreshPending = true;
+    Glib::signal_timeout().connect([this]() -> bool {
+        _wordCountRefreshPending = false;
+        if (not force_exit() and _pCtConfig->wordCountOn) {
+            update_selected_node_statusbar_info();
+        }
+        return false; // one shot
+    }, 500);
+}
+
+void CtMainWin::text_typography_apply()
+{
+    auto& textView = _ctTextview.mm();
+    textView.set_pixels_above_lines(_pCtConfig->spaceAroundLines);
+    textView.set_pixels_below_lines(_pCtConfig->spaceAroundLines);
+    // line spacing: extra pixels inside wrapped lines from the height ratio x font size
+    int lineExtraPx = 0;
+    if (_pCtConfig->lineSpacing > 1.0) {
+        Pango::FontDescription fontDesc(_pCtConfig->rtFont);
+        const int fontSizePx = std::max(8, fontDesc.get_size() / Pango::SCALE);
+        lineExtraPx = static_cast<int>(std::round((_pCtConfig->lineSpacing - 1.0) * fontSizePx));
+    }
+    _ctTextview.set_pixels_inside_wrap(_pCtConfig->spaceAroundLines + lineExtraPx, _pCtConfig->relativeWrappedSpace);
+    textView.set_top_margin(_pCtConfig->textMarginTop);
+    gtk_text_view_set_bottom_margin(GTK_TEXT_VIEW(_ctTextview.gobj()), _pCtConfig->textMarginBottom);
+    _update_editor_width_margins(-1/*unknown alloc width yet*/);
+}
+
+void CtMainWin::_update_editor_width_margins(int allocWidth)
+{
+    if (allocWidth < 0) {
+        allocWidth = _ctTextview.mm().get_allocated_width();
+    }
+    int margin = std::max(_pCtConfig->textMarginLeft, _pCtConfig->textMarginRight);
+    if (_pCtConfig->editorWidth > 0 and allocWidth > _pCtConfig->editorWidth) {
+        margin += (allocWidth - _pCtConfig->editorWidth) / 2;
+    }
+    auto& textView = _ctTextview.mm();
+    if (textView.get_left_margin() != margin) {
+        textView.set_left_margin(margin);
+    }
+    if (textView.get_right_margin() != margin) {
+        textView.set_right_margin(margin);
+    }
 }
 
 void CtMainWin::tree_node_paste_from_other_window(CtMainWin* pWinToCopyFrom, gint64 nodeIdToCopyFrom)
