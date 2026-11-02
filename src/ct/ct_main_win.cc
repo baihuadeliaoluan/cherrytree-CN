@@ -1528,7 +1528,6 @@ void CtMainWin::update_selected_node_statusbar_info()
             if (is_selection) {
                 statusbar_text += _("(Selection)");
             }
-            statusbar_text += separator_text + _("Chars") + _(": ") + std::to_string(wordCountInfo.chars);
         }
         if (treeIter.get_node_creating_time() > 0) {
             const Glib::ustring timestamp_creation = str::time_format(_pCtConfig->timestampFormat, treeIter.get_node_creating_time());

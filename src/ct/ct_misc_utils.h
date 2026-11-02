@@ -346,8 +346,9 @@ PangoDirection get_pango_direction(const Gtk::TextIter& textIter);
 int get_words_count(const Glib::RefPtr<Gtk::TextBuffer>& text_buffer);
 int get_words_count(const Glib::ustring& text);
 
-// word count info, Word-like counting: each CJK char counts as one word,
-// consecutive western letters/digits count as one word
+// word count info, WPS-like counting: spaces/newlines not counted, every
+// visible char counts as one word except consecutive western letters/digits
+// collapse into one; symbols (quotes included) count one each
 struct CtWordCountInfo
 {
     int words{0};           // 字数

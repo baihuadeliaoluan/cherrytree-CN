@@ -863,6 +863,10 @@ inline bool _is_cjk_char(gunichar ch)
         || (ch >= 0x20000 && ch <= 0x2FA1F); // CJK Extension B+
 }
 
+// WPS-style word count: spaces/newlines are not counted; every visible char
+// counts as one word, except that consecutive western letters/digits collapse
+// into one word ("hello" = 1, "123" = 1, each hanzi = 1, each symbol = 1,
+// quotes “ ” included)
 CtTextIterUtil::CtWordCountInfo CtTextIterUtil::get_word_count_info(const Glib::ustring& text)
 {
     CtWordCountInfo info;
@@ -873,9 +877,11 @@ CtTextIterUtil::CtWordCountInfo CtTextIterUtil::get_word_count_info(const Glib::
     bool inWord = false;
     for (const gunichar ch : text) {
         ++info.chars;
-        if (not Glib::Unicode::isspace(ch)) {
-            ++info.charsNoSpaces;
+        if (Glib::Unicode::isspace(ch)) {
+            inWord = false;
+            continue;
         }
+        ++info.charsNoSpaces;
         if (_is_cjk_char(ch)) {
             ++info.words;   // every CJK char is a word on its own
             inWord = false;
@@ -887,6 +893,7 @@ CtTextIterUtil::CtWordCountInfo CtTextIterUtil::get_word_count_info(const Glib::
             }
         }
         else {
+            ++info.words;   // punctuation/symbol (quotes, brackets, ...): one each
             inWord = false;
         }
     }
