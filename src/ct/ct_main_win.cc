@@ -1571,8 +1571,7 @@ void CtMainWin::typewriter_scroll_cursor()
             return;
         }
         const int blankPx = viewH * std::min(_pCtConfig->cursorBottomBlankPct, 90) / 100;
-        Glib::RefPtr<Gtk::TextBuffer::Mark> insertMark = buffer->get_insert();
-        Gtk::TextIter insertIter = insertMark->get_iter();
+        Gtk::TextBuffer::iterator insertIter = buffer->get_insert()->get_iter();
         Gdk::Rectangle iterRect;
         textView.mm().get_iter_location(insertIter, iterRect);
         // iter location and visible rect share buffer coordinates
@@ -1584,7 +1583,7 @@ void CtMainWin::typewriter_scroll_cursor()
             // scroll_to_mark clamps itself at the scrollable limits
             const double yalign = std::clamp(
                 (static_cast<double>(limitY - iterRect.get_height()) / viewH), 0.0, 1.0);
-            textView.mm().scroll_to(insertMark, 0.0, /*use_align*/true, /*xalign*/0.0, yalign);
+            textView.mm().scroll_to(insertIter, 0.0, /*xalign*/0.0, yalign);
         }
     }, 120);
 }
