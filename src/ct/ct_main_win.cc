@@ -1498,7 +1498,7 @@ void CtMainWin::update_selected_node_statusbar_info()
     else if (_pCtConfig->wordCountOn and _uCtActions) {
         bool is_selection = false;
         const auto wordCountInfo = _uCtActions->get_word_count_for_statusbar(is_selection);
-        statusbar_text = _("Word Count") + _(": ") + std::to_string(wordCountInfo.words);
+        statusbar_text = Glib::ustring{_("Word Count")} + _(": ") + std::to_string(wordCountInfo.words);
         if (is_selection) {
             statusbar_text += _("(Selection)");
         }
@@ -1561,7 +1561,7 @@ void CtMainWin::typewriter_scroll_cursor()
             return;
         }
         Gdk::Rectangle visible;
-        textView.get_visible_rect(visible);
+        textView.mm().get_visible_rect(visible);
         const int viewH = visible.get_height();
         if (viewH <= 0) {
             return;
@@ -1569,13 +1569,13 @@ void CtMainWin::typewriter_scroll_cursor()
         const int blankPx = viewH * std::min(_pCtConfig->cursorBottomBlankPct, 90) / 100;
         Gtk::TextIter insertIter = buffer->get_insert()->get_iter();
         Gdk::Rectangle iterRect;
-        textView.get_iter_location(insertIter, iterRect);
+        textView.mm().get_iter_location(insertIter, iterRect);
         // iter location and visible rect share buffer coordinates
         const int lineBottom = iterRect.get_y() + iterRect.get_height();
-        const int screenBottom = lineBottom - static_cast<int>(get_text_view().get_vadjustment()->get_value());
+        const int screenBottom = lineBottom - static_cast<int>(getScrolledwindowText().get_vadjustment()->get_value());
         const int limitY = viewH - blankPx;
         if (screenBottom > limitY) {
-            auto vAdj = get_text_view().get_vadjustment();
+            auto vAdj = getScrolledwindowText().get_vadjustment();
             const double target = lineBottom - limitY;
             vAdj->set_value(std::clamp(target, vAdj->get_lower(), std::max(vAdj->get_lower(), vAdj->get_upper() - vAdj->get_page_size())));
         }
