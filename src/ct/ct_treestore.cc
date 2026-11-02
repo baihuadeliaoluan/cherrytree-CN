@@ -1031,8 +1031,10 @@ void CtTreeStore::text_view_apply_textbuffer(CtTreeIter& treeIter, CtTextView* p
     _curr_node_sigc_conn.push_back(
         pTextBuffer->signal_erase().connect(sigc::mem_fun(*this, &CtTreeStore::_on_textbuffer_erase), false)
     );
+    // after=true: run AFTER GtkTextView's default handler (scroll cursor
+    // onscreen), otherwise the typewriter correction gets clobbered
     _curr_node_sigc_conn.push_back(
-        pTextBuffer->signal_mark_set().connect(sigc::mem_fun(*this, &CtTreeStore::_on_textbuffer_mark_set), false)
+        pTextBuffer->signal_mark_set().connect(sigc::mem_fun(*this, &CtTreeStore::_on_textbuffer_mark_set), true)
     );
     // word count live refresh on any text content change
     _curr_node_sigc_conn.push_back(

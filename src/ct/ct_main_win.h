@@ -394,7 +394,6 @@ private:
     bool                _userActive{true}; // pygtk: user_active
     bool                _isUpdatingStatusbarInfo{false};
     bool                _wordCountRefreshPending{false};
-    bool                _typewriterScrollPending{false};
     bool                _forceExit{false};
     int                 _cursorKeyPress{-1};
     int                 _autoSaveCounter{0};
