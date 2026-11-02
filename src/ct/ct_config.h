@@ -130,6 +130,7 @@ public:
     int                                         textMarginBottom{3};
     int                                         editorWidth{0}; /* 0 = full width, >0 = centered content column width in px */
     double                                      lineSpacing{1.0}; /* line height ratio, 1.0 = default */
+    int                                         cursorBottomBlankPct{50}; /* typewriter scrolling: blank kept below cursor while typing, % of viewport, 0 = off */
     int                                         tabsWidth{4};
     int                                         anchorSize{20};
     int                                         latexSizeDpi{140};

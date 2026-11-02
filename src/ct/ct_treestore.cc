@@ -1331,6 +1331,7 @@ void CtTreeStore::_on_textbuffer_mark_set(const Gtk::TextIter& /*iter*/, const G
                 _pCtMainWin->get_state_machine().update_curr_state_cursor_pos(currTreeIter.get_node_id_data_holder());
             }
             _pCtMainWin->get_text_view().column_edit_selection_update();
+            _pCtMainWin->typewriter_scroll_cursor();
         }
         // selection changes (and cursor moves) refresh the word count statusbar
         if (rMark->get_name() == "insert" or rMark->get_name() == "selection_bound") {

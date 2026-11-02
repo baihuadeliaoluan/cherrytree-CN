@@ -135,6 +135,7 @@ public:
 
     void update_selected_node_statusbar_info();
     void schedule_word_count_refresh();
+    void typewriter_scroll_cursor();
     void text_typography_apply();
     void tree_node_paste_from_other_window(CtMainWin* pWinToCopyFrom, gint64 nodeIdToCopyFrom);
 
@@ -393,6 +394,7 @@ private:
     bool                _userActive{true}; // pygtk: user_active
     bool                _isUpdatingStatusbarInfo{false};
     bool                _wordCountRefreshPending{false};
+    bool                _typewriterScrollPending{false};
     bool                _forceExit{false};
     int                 _cursorKeyPress{-1};
     int                 _autoSaveCounter{0};

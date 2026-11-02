@@ -349,6 +349,7 @@ void CtConfig::_populate_keyfile_from_data()
     _uKeyFile->set_integer(_currentGroup, "text_margin_bottom", textMarginBottom);
     _uKeyFile->set_integer(_currentGroup, "editor_width", editorWidth);
     _uKeyFile->set_double(_currentGroup, "line_spacing", lineSpacing);
+    _uKeyFile->set_integer(_currentGroup, "cursor_bottom_blank_pct", cursorBottomBlankPct);
     _uKeyFile->set_string(_currentGroup, "h_rule", hRule);
     _uKeyFile->set_string(_currentGroup, "vte_shell", vteShell);
     _uKeyFile->set_string(_currentGroup, "special_chars", specialChars.item());
@@ -691,6 +692,7 @@ void CtConfig::_populate_data_from_keyfile()
     _populate_int_from_keyfile("text_margin_bottom", &textMarginBottom);
     _populate_int_from_keyfile("editor_width", &editorWidth);
     _populate_double_from_keyfile("line_spacing", &lineSpacing);
+    _populate_int_from_keyfile("cursor_bottom_blank_pct", &cursorBottomBlankPct);
     _populate_string_from_keyfile("h_rule", &hRule);
     _populate_string_from_keyfile("vte_shell", &vteShell);
     _populate_string_from_keyfile("special_chars", &specialChars);

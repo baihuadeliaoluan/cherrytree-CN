@@ -179,6 +179,27 @@ Gtk::Widget* CtPrefDlg::build_tab_typography()
         ++row;
     }
 
+    // Cursor Bottom Blank % (typewriter scrolling while typing)
+    {
+        auto label_blank = Gtk::manage(new Gtk::Label{_("Bottom Blank while Typing (%)")});
+        gtk_label_set_xalign(label_blank->gobj(), 0.0);
+        Glib::RefPtr<Gtk::Adjustment> adj_blank = Gtk::Adjustment::create(_pConfig->cursorBottomBlankPct, 0, 90, 5);
+        auto scale_blank = Gtk::manage(new Gtk::HScale{adj_blank});
+        scale_blank->set_size_request(200, -1);
+        scale_blank->set_draw_value(false);
+        auto spin_blank = Gtk::manage(new Gtk::SpinButton{adj_blank});
+        spin_blank->set_digits(0);
+        label_blank->set_tooltip_text(_("Blank space kept below the cursor line while typing; 50% keeps the cursor near mid-screen, 0 = off"));
+        adj_blank->signal_value_changed().connect([this, adj_blank](){
+            const int val = static_cast<int>(adj_blank->get_value());
+            _pConfig->cursorBottomBlankPct = val;
+        });
+        pGrid->attach(*label_blank, 0, row, 1, 1);
+        pGrid->attach(*scale_blank, 1, row, 1, 1);
+        pGrid->attach(*spin_blank, 2, row, 1, 1);
+        ++row;
+    }
+
     // Justify Fill Whole Document hint
     {
         auto label_justify = Gtk::manage(new Gtk::Label{_("Tip: Format menu > Justify Fill All Paragraphs aligns the whole document.")});

@@ -30,6 +30,7 @@
 #endif
 #include "ct_main_win.h"
 #include "ct_actions.h"
+#include <algorithm>
 #include "ct_storage_control.h"
 #include "ct_clipboard.h"
 #include "ct_dialogs.h"
@@ -92,17 +93,9 @@ void CtMainWin::init_app_actions_gtk4()
 }
 #endif /* GTKMM_MAJOR_VERSION >= 4 */
 
-void CtStatusBar::new_cursor_pos(const int r, const int c)
+void CtStatusBar::new_cursor_pos(const int /*r*/, const int /*c*/)
 {
-    if (_r != r or _c != c) {
-#if GLIBMM_MAJOR_VERSION > 2 || (GLIBMM_MAJOR_VERSION == 2 && GLIBMM_MINOR_VERSION >= 62)
-        cursorPos.set_text(Glib::ustring::sprintf(" (%d,%d)", r, c));
-#else /* glibmm < 2.62 */
-        cursorPos.set_text(fmt::format(" ({},{})", r, c));
-#endif /* glibmm < 2.62 */
-        _r = r;
-        _c = c;
-    }
+    // cursor (line,col) display removed - statusbar shows word count only
 }
 
 CtMainWin::CtMainWin(bool                            no_gui,
@@ -1502,49 +1495,12 @@ void CtMainWin::update_selected_node_statusbar_info()
     if (not treeIter) {
         statusbar_text = _("No Node is Selected");
     }
-    else {
-        const std::string separator_text{"  -  "};
-        statusbar_text = Glib::ustring{_("Node Type")} + _(": ");
-        const std::string syntaxHighl = treeIter.get_node_syntax_highlighting();
-        if (CtConst::RICH_TEXT_ID == syntaxHighl) {
-            statusbar_text += _("Rich Text");
-        }
-        else if (CtConst::PLAIN_TEXT_ID == syntaxHighl) {
-            statusbar_text += _("Plain Text");
-        }
-        else {
-            statusbar_text += syntaxHighl;
-        }
-        if (not treeIter.get_node_tags().empty()) {
-            statusbar_text += separator_text + _("Tags") + _(": ") + treeIter.get_node_tags();
-        }
-        if (_pCtConfig->enableSpellCheck && treeIter.get_node_is_text()) {
-            statusbar_text += separator_text + _("Spell Check") + _(": ") + _pCtConfig->spellCheckLang;
-        }
-        if (_pCtConfig->wordCountOn and _uCtActions) {
-            bool is_selection = false;
-            const auto wordCountInfo = _uCtActions->get_word_count_for_statusbar(is_selection);
-            statusbar_text += separator_text + _("Word Count") + _(": ") + std::to_string(wordCountInfo.words);
-            if (is_selection) {
-                statusbar_text += _("(Selection)");
-            }
-        }
-        if (treeIter.get_node_creating_time() > 0) {
-            const Glib::ustring timestamp_creation = str::time_format(_pCtConfig->timestampFormat, treeIter.get_node_creating_time());
-            statusbar_text += separator_text + _("Date Created") + _(": ") + timestamp_creation;
-        }
-        if (treeIter.get_node_modification_time() > 0) {
-            const Glib::ustring timestamp_lastsave = str::time_format(_pCtConfig->timestampFormat, treeIter.get_node_modification_time());
-            statusbar_text += separator_text + _("Date Modified") + _(": ") + timestamp_lastsave;
-        }
-        size_t direct_children_count{0};
-        for (auto child_iter = treeIter->children().begin(); child_iter != treeIter->children().end(); ++child_iter) {
-            ++direct_children_count;
-        }
-        const size_t total_children_count = treeIter.get_children_node_ids().size();
-        statusbar_text += separator_text + _("Subnodes") + _(": ") + std::to_string(direct_children_count);
-        if (direct_children_count != total_children_count) {
-            statusbar_text += CtConst::CHAR_SLASH + std::to_string(total_children_count);
+    else if (_pCtConfig->wordCountOn and _uCtActions) {
+        bool is_selection = false;
+        const auto wordCountInfo = _uCtActions->get_word_count_for_statusbar(is_selection);
+        statusbar_text = _("Word Count") + _(": ") + std::to_string(wordCountInfo.words);
+        if (is_selection) {
+            statusbar_text += _("(Selection)");
         }
     }
     _ctStatusBar.update_status(statusbar_text);
@@ -1583,6 +1539,47 @@ void CtMainWin::text_typography_apply()
     gtk_text_view_set_bottom_margin(GTK_TEXT_VIEW(_ctTextview.gobj()),
         _pCtConfig->scrollBeyondLastLine ? 400 : _pCtConfig->textMarginBottom);
     _update_editor_width_margins(-1/*unknown alloc width yet*/);
+}
+
+// typewriter scrolling: while typing/moving the cursor, keep a blank strip
+// (cursorBottomBlankPct % of the viewport) below the cursor line, so the
+// cursor never hugs the statusbar; 50% ≈ cursor stays near mid-screen
+void CtMainWin::typewriter_scroll_cursor()
+{
+    if (_pCtConfig->cursorBottomBlankPct <= 0 or _typewriterScrollPending) {
+        return;
+    }
+    _typewriterScrollPending = true;
+    Glib::signal_idle().connect_once([this]() {
+        _typewriterScrollPending = false;
+        if (force_exit() or _no_gui or _pCtConfig->cursorBottomBlankPct <= 0) {
+            return;
+        }
+        auto& textView = get_text_view();
+        auto buffer = textView.get_buffer();
+        if (not buffer) {
+            return;
+        }
+        Gdk::Rectangle visible;
+        textView.get_visible_rect(visible);
+        const int viewH = visible.get_height();
+        if (viewH <= 0) {
+            return;
+        }
+        const int blankPx = viewH * std::min(_pCtConfig->cursorBottomBlankPct, 90) / 100;
+        Gtk::TextIter insertIter = buffer->get_insert()->get_iter();
+        Gdk::Rectangle iterRect;
+        textView.get_iter_location(insertIter, iterRect);
+        // iter location and visible rect share buffer coordinates
+        const int lineBottom = iterRect.get_y() + iterRect.get_height();
+        const int screenBottom = lineBottom - static_cast<int>(get_text_view().get_vadjustment()->get_value());
+        const int limitY = viewH - blankPx;
+        if (screenBottom > limitY) {
+            auto vAdj = get_text_view().get_vadjustment();
+            const double target = lineBottom - limitY;
+            vAdj->set_value(std::clamp(target, vAdj->get_lower(), std::max(vAdj->get_lower(), vAdj->get_upper() - vAdj->get_page_size())));
+        }
+    });
 }
 
 void CtMainWin::_update_editor_width_margins(int allocWidth)
